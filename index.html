@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Nibble - Free Online Audio Editor | Clip, Trim & Convert Audio</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Audio Nibble is a free online audio editor. Clip, trim, crop, and convert audio files in your browser. Export to WAV, MP3, OGG, and WEBM. No upload required - works entirely offline.">
+    <meta name="keywords" content="audio editor, online audio editor, free audio editor, audio trimmer, audio cutter, clip audio, crop audio, trim audio, convert audio, WAV to MP3, audio converter, waveform editor, sound editor, audio splitter, cut MP3, trim MP3 online free, browser audio editor">
+    <meta name="author" content="MooLab">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#6c5ce7">
+    <link rel="canonical" href="https://moolab.com/audio-nibble/">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Audio Nibble - Free Online Audio Editor">
+    <meta property="og:description" content="Clip, trim, crop, and convert audio files right in your browser. Free, fast, and private - no uploads needed.">
+    <meta property="og:image" content="moolabcow.png">
+    <meta property="og:site_name" content="Audio Nibble by MooLab">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Audio Nibble - Free Online Audio Editor">
+    <meta name="twitter:description" content="Clip, trim, crop, and convert audio files right in your browser. Free, fast, and private.">
+    <meta name="twitter:image" content="moolabcow.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Audio Nibble",
+        "description": "Free online audio editor. Clip, trim, crop, and convert audio files in your browser.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "browserRequirements": "Requires a modern browser with Web Audio API support"
+    }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="moolabcow.png">
+    <link rel="apple-touch-icon" href="moolabcow.png">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-tertiary: #242836;
+            --bg-hover: #2d3245;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --accent-dark: #4834d4;
+            --text-primary: #e8e8ef;
+            --text-secondary: #8b8da3;
+            --text-muted: #5a5c72;
+            --border: #2d3045;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #e17055;
+            --waveform-bg: #161922;
+            --waveform-color: #6c5ce7;
+            --waveform-played: #a29bfe;
+            --selection-bg: rgba(108, 92, 231, 0.25);
+            --selection-border: #6c5ce7;
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+
+        .logo img { width: 32px; height: 32px; object-fit: contain; }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover { background: var(--bg-hover); border-color: var(--text-muted); }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--accent-dark); }
+
+        .btn-success {
+            background: var(--success);
+            border-color: var(--success);
+            color: #fff;
+        }
+        .btn-success:hover { background: #00a381; }
+
+        .btn-danger {
+            background: transparent;
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .btn-danger:hover { background: rgba(225, 112, 85, 0.1); }
+
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .btn-icon {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-icon:hover { background: var(--bg-hover); }
+        .btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-icon svg { width: 18px; height: 18px; }
+
+        /* Layout */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-secondary);
+            margin-bottom: 20px;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(108, 92, 231, 0.05);
+        }
+
+        .drop-zone.drag-over { transform: scale(1.005); }
+
+        .drop-zone img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+
+        .drop-zone:hover img, .drop-zone.drag-over img {
+            opacity: 1;
+        }
+
+        .drop-zone h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .drop-zone p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .drop-zone.hidden { display: none; }
+
+        /* Editor */
+        .editor { display: none; }
+        .editor.visible { display: block; }
+
+        /* File Info Bar */
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .file-info-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 12px;
+        }
+
+        .file-meta span {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toolbar-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 4px;
+        }
+
+        /* Waveform */
+        .waveform-container {
+            position: relative;
+            background: var(--waveform-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .waveform-wrapper {
+            position: relative;
+            height: 224px;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .waveform-wrapper::-webkit-scrollbar { height: 8px; }
+        .waveform-wrapper::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        .waveform-wrapper::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 4px; }
+
+        #waveformCanvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* Selection overlay */
+        .selection-overlay {
+            position: absolute;
+            top: 0;
+            height: 200px;
+            background: var(--selection-bg);
+            border-left: 2px solid var(--selection-border);
+            border-right: 2px solid var(--selection-border);
+            pointer-events: none;
+            display: none;
+            z-index: 5;
+        }
+
+        .selection-overlay.visible { display: block; }
+
+        .selection-handle {
+            position: absolute;
+            top: 0;
+            width: 10px;
+            height: 100%;
+            cursor: ew-resize;
+            pointer-events: all;
+            z-index: 6;
+        }
+
+        .selection-handle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 40px;
+            background: var(--accent-light);
+            border-radius: 2px;
+        }
+
+        .selection-handle-left { left: -5px; }
+        .selection-handle-left::after { left: 3px; }
+        .selection-handle-right { right: -5px; }
+        .selection-handle-right::after { right: 3px; }
+
+        /* Playhead */
+        .playhead {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 200px;
+            background: #ff6b6b;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+            box-shadow: 0 0 6px rgba(255, 107, 107, 0.5);
+        }
+
+        .playhead.visible { display: block; }
+
+        .playhead::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -5px;
+            width: 12px;
+            height: 12px;
+            background: #ff6b6b;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+        }
+
+        /* Timeline */
+        .timeline {
+            height: 24px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        #timelineCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Transport Controls */
+        .transport {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+        }
+
+        .transport-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .transport-btn:hover { background: var(--bg-hover); }
+        .transport-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .transport-btn svg { width: 20px; height: 20px; }
+
+        .transport-btn.play-btn {
+            width: 48px;
+            height: 48px;
+            background: var(--accent);
+            color: #fff;
+        }
+        .transport-btn.play-btn:hover { background: var(--accent-dark); }
+        .transport-btn.play-btn svg { width: 24px; height: 24px; }
+
+        .time-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius);
+            min-width: 100px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .time-display span { color: var(--text-primary); }
+
+        /* Volume Slider */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 16px;
+        }
+
+        .volume-control svg { width: 18px; height: 18px; color: var(--text-secondary); }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Selection Info */
+        .selection-info {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: rgba(108, 92, 231, 0.08);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .selection-info.visible { display: flex; }
+
+        .selection-info-text {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .selection-info-text strong { color: var(--accent-light); }
+
+        .selection-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        /* Panels */
+        .panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-tertiary);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .panel-body { padding: 14px; }
+
+        /* Effects */
+        .effect-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .effect-row:last-child { border-bottom: none; }
+
+        .effect-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .effect-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .effect-value {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Export Panel */
+        .export-format {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .format-option {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: var(--bg-tertiary);
+        }
+
+        .format-option:hover { border-color: var(--text-muted); }
+
+        .format-option.selected {
+            border-color: var(--accent);
+            background: rgba(108, 92, 231, 0.1);
+        }
+
+        .format-option .format-name {
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .format-option .format-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .export-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .export-setting {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .export-setting label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .export-setting select {
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 12px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            display: none;
+            margin: 12px 0;
+        }
+
+        .progress-container.visible { display: block; }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.1s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* Export Filename */
+        .export-filename {
+            margin-bottom: 12px;
+        }
+
+        .export-filename label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .export-filename-row {
+            display: flex;
+            align-items: stretch;
+        }
+
+        .export-filename-row input {
+            flex: 1;
+            padding: 7px 10px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-right: none;
+            border-radius: var(--radius) 0 0 var(--radius);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            min-width: 0;
+        }
+
+        .export-filename-row input:focus {
+            border-color: var(--accent);
+        }
+
+        .export-filename-ext {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            color: var(--accent-light);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .export-format-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            max-width: 600px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: modal-in 0.2s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .format-guide {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .format-guide-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .format-guide-badge {
+            flex-shrink: 0;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 13px;
+            color: #fff;
+        }
+
+        .format-guide-badge.wav { background: #6c5ce7; }
+        .format-guide-badge.mp3 { background: #e17055; }
+        .format-guide-badge.ogg { background: #00b894; }
+        .format-guide-badge.webm { background: #0984e3; }
+
+        .format-guide-content strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .format-guide-content p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 6px;
+        }
+
+        .format-guide-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .format-guide-tags span {
+            font-size: 10px;
+            padding: 2px 7px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .format-guide-footer {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            line-height: 1.6;
+        }
+
+        .format-guide-footer strong {
+            color: var(--text-primary);
+        }
+
+        /* History Panel */
+        .history-list {
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .history-item .history-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .history-item .history-icon svg { width: 12px; height: 12px; }
+
+        .history-item.current { color: var(--accent-light); font-weight: 500; }
+
+        /* Keyboard shortcuts */
+        kbd {
+            display: inline-block;
+            padding: 2px 5px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text-muted);
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            animation: toast-in 0.3s ease;
+            max-width: 340px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .toast-success { background: var(--success); color: #fff; }
+        .toast-error { background: var(--danger); color: #fff; }
+        .toast-info { background: var(--accent); color: #fff; }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .panels { grid-template-columns: 1fr; }
+            .toolbar { gap: 4px; }
+            .file-info { flex-direction: column; align-items: flex-start; }
+            .transport { flex-wrap: wrap; }
+            .header { padding: 10px 16px; }
+            .app-container { padding: 12px 16px; }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Zoom indicator */
+        .zoom-indicator {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 4px 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <img src="moolabcow.png" alt="Audio Nibble logo">
+            Audio Nibble
+        </div>
+        <div class="header-actions">
+            <button class="btn" id="btnImport" title="Import audio file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Import
+            </button>
+            <button class="btn btn-primary" id="btnExportQuick" disabled title="Quick export as WAV">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+            </button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="dropZone">
+            <img src="moolabcow.png" alt="Audio Nibble">
+            <h3>Drop an audio file here or click to browse</h3>
+            <p>Supports MP3, WAV, OGG, FLAC, AAC, M4A, WEBM, and more</p>
+            <input type="file" id="fileInput" accept="audio/*" hidden>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor" id="editor">
+            <!-- File Info -->
+            <div class="file-info" id="fileInfo">
+                <div class="file-info-left">
+                    <span class="file-name" id="fileName">-</span>
+                    <div class="file-meta">
+                        <span id="metaDuration">0:00</span>
+                        <span id="metaSampleRate">44100 Hz</span>
+                        <span id="metaChannels">Stereo</span>
+                        <span id="metaFormat">WAV</span>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-danger" id="btnClose">Close File</button>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="btn-icon" id="btnUndo" disabled title="Undo (Ctrl+Z)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                    </button>
+                    <button class="btn-icon" id="btnRedo" disabled title="Redo (Ctrl+Y)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg>
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="btn btn-sm" id="btnCrop" disabled title="Keep selection, remove rest (Ctrl+Shift+X)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.13 1L6 16a2 2 0 002 2h15"/><path d="M1 6.13L16 6a2 2 0 012 2v15"/></svg>
+                        Crop
+                    </button>
+                    <button class="btn btn-sm" id="btnDelete" disabled title="Delete selection (Delete)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        Delete
+                    </button>
+                    <button class="btn btn-sm" id="btnTrimSilence" title="Trim silence from start and end">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                        Trim Silence
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="btn btn-sm" id="btnFadeIn" disabled title="Fade in selection">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 20 8 12 24 4"/></svg>
+                        Fade In
+                    </button>
+                    <button class="btn btn-sm" id="btnFadeOut" disabled title="Fade out selection">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 16 12 24 20"/></svg>
+                        Fade Out
+                    </button>
+                    <button class="btn btn-sm" id="btnNormalize" title="Normalize volume">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                        Normalize
+                    </button>
+                    <button class="btn btn-sm" id="btnReverse" title="Reverse audio">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+                        Reverse
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="btn-icon" id="btnZoomIn" title="Zoom in (+)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </button>
+                    <button class="btn-icon" id="btnZoomOut" title="Zoom out (-)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </button>
+                    <button class="btn-icon" id="btnZoomFit" title="Fit to view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+                    </button>
+                    <span class="zoom-indicator" id="zoomIndicator">100%</span>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="btn btn-sm" id="btnSelectAll" title="Select all (Ctrl+A)">Select All</button>
+                    <button class="btn btn-sm" id="btnClearSelection" disabled title="Clear selection (Esc)">Deselect</button>
+                </div>
+            </div>
+
+            <!-- Waveform -->
+            <div class="waveform-container">
+                <div class="waveform-wrapper" id="waveformWrapper">
+                    <canvas id="waveformCanvas"></canvas>
+                    <div class="selection-overlay" id="selectionOverlay">
+                        <div class="selection-handle selection-handle-left" id="handleLeft"></div>
+                        <div class="selection-handle selection-handle-right" id="handleRight"></div>
+                    </div>
+                    <div class="playhead" id="playhead"></div>
+                    <div class="timeline">
+                        <canvas id="timelineCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selection Info -->
+            <div class="selection-info" id="selectionInfo">
+                <div class="selection-info-text">
+                    <span>Selection: <strong id="selStart">0:00.000</strong> to <strong id="selEnd">0:00.000</strong></span>
+                    <span>Duration: <strong id="selDuration">0:00.000</strong></span>
+                </div>
+                <div class="selection-actions">
+                    <button class="btn btn-sm" id="btnPlaySelection" title="Play selection">Play Selection</button>
+                    <button class="btn btn-sm btn-primary" id="btnCropSelection">Crop to Selection</button>
+                </div>
+            </div>
+
+            <!-- Transport -->
+            <div class="transport">
+                <button class="transport-btn" id="btnSkipStart" title="Skip to start (Home)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                </button>
+                <button class="transport-btn" id="btnRewind" title="Rewind 5s">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>
+                </button>
+                <button class="transport-btn play-btn" id="btnPlay" title="Play/Pause (Space)">
+                    <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor" id="pauseIcon" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                </button>
+                <button class="transport-btn" id="btnStop" title="Stop">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                </button>
+                <button class="transport-btn" id="btnForward" title="Forward 5s">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
+                </button>
+                <button class="transport-btn" id="btnSkipEnd" title="Skip to end (End)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                </button>
+
+                <div class="time-display">
+                    <span id="currentTime">0:00.000</span> / <span id="totalTime">0:00.000</span>
+                </div>
+
+                <div class="volume-control">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="100" style="width:80px" title="Volume">
+                </div>
+
+                <div class="volume-control">
+                    <span style="font-size:12px;color:var(--text-muted)">Speed</span>
+                    <input type="range" id="speedSlider" min="25" max="200" value="100" style="width:70px" title="Playback speed">
+                    <span id="speedValue" style="font-size:12px;color:var(--text-muted);min-width:32px">1.0x</span>
+                </div>
+            </div>
+
+            <!-- Panels -->
+            <div class="panels">
+                <!-- Effects Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Effects</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="effect-row">
+                            <span class="effect-label">Gain (Volume)</span>
+                            <div class="effect-controls">
+                                <input type="range" id="gainSlider" min="0" max="300" value="100" style="width:120px">
+                                <span class="effect-value" id="gainValue">100%</span>
+                                <button class="btn btn-sm" id="btnApplyGain">Apply</button>
+                            </div>
+                        </div>
+                        <div class="effect-row">
+                            <span class="effect-label">Playback Speed</span>
+                            <div class="effect-controls">
+                                <input type="range" id="stretchSlider" min="50" max="200" value="100" style="width:120px">
+                                <span class="effect-value" id="stretchValue">100%</span>
+                                <button class="btn btn-sm" id="btnApplyStretch">Apply</button>
+                            </div>
+                        </div>
+                        <div class="effect-row">
+                            <span class="effect-label">Silence</span>
+                            <div class="effect-controls">
+                                <input type="number" id="silenceDuration" value="1" min="0.1" max="30" step="0.1" style="width:60px;padding:4px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:12px">
+                                <span class="effect-value">sec</span>
+                                <button class="btn btn-sm" id="btnInsertSilence">Insert</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Export</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="export-filename">
+                            <label for="exportFileName">File Name</label>
+                            <div class="export-filename-row">
+                                <input type="text" id="exportFileName" placeholder="my-audio" spellcheck="false">
+                                <span class="export-filename-ext" id="exportFileExt">.wav</span>
+                            </div>
+                        </div>
+                        <div class="export-format-header">
+                            <span>Format</span>
+                            <button class="btn btn-sm" id="btnFormatHelp" title="Which format should I use?">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                Which format?
+                            </button>
+                        </div>
+                        <div class="export-format">
+                            <div class="format-option selected" data-format="wav">
+                                <span class="format-name">WAV</span>
+                                <span class="format-desc">Lossless, large</span>
+                            </div>
+                            <div class="format-option" data-format="mp3">
+                                <span class="format-name">MP3</span>
+                                <span class="format-desc">Compressed</span>
+                            </div>
+                            <div class="format-option" data-format="ogg">
+                                <span class="format-name">OGG</span>
+                                <span class="format-desc">Open format</span>
+                            </div>
+                            <div class="format-option" data-format="webm">
+                                <span class="format-name">WEBM</span>
+                                <span class="format-desc">Web optimized</span>
+                            </div>
+                        </div>
+                        <div class="export-settings">
+                            <div class="export-setting">
+                                <label>Sample Rate</label>
+                                <select id="exportSampleRate">
+                                    <option value="0">Original</option>
+                                    <option value="44100">44100 Hz</option>
+                                    <option value="48000">48000 Hz</option>
+                                    <option value="22050">22050 Hz</option>
+                                    <option value="16000">16000 Hz</option>
+                                    <option value="8000">8000 Hz</option>
+                                </select>
+                            </div>
+                            <div class="export-setting" id="bitrateRow">
+                                <label>Bitrate (MP3)</label>
+                                <select id="exportBitrate">
+                                    <option value="128">128 kbps</option>
+                                    <option value="192" selected>192 kbps</option>
+                                    <option value="256">256 kbps</option>
+                                    <option value="320">320 kbps</option>
+                                </select>
+                            </div>
+                            <div class="export-setting">
+                                <label>Channels</label>
+                                <select id="exportChannels">
+                                    <option value="0">Original</option>
+                                    <option value="1">Mono</option>
+                                    <option value="2">Stereo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="progress-container" id="exportProgress">
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Exporting...</div>
+                        </div>
+                        <button class="btn btn-success" id="btnExport" style="width:100%">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Panel -->
+            <div class="panel" style="margin-bottom:20px">
+                <div class="panel-header">
+                    <span class="panel-title">Edit History</span>
+                    <button class="btn btn-sm" id="btnClearHistory">Clear</button>
+                </div>
+                <div class="panel-body">
+                    <div class="history-list" id="historyList">
+                        <div class="history-item current">
+                            <div class="history-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/></svg></div>
+                            <span>Original audio loaded</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Keyboard Shortcuts</span>
+                </div>
+                <div class="panel-body" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;font-size:12px;color:var(--text-secondary)">
+                    <span><kbd>Space</kbd> Play / Pause</span>
+                    <span><kbd>Ctrl+Z</kbd> Undo</span>
+                    <span><kbd>Home</kbd> Go to start</span>
+                    <span><kbd>Ctrl+Y</kbd> Redo</span>
+                    <span><kbd>End</kbd> Go to end</span>
+                    <span><kbd>Ctrl+A</kbd> Select all</span>
+                    <span><kbd>+</kbd> Zoom in</span>
+                    <span><kbd>Ctrl+Shift+X</kbd> Crop selection</span>
+                    <span><kbd>-</kbd> Zoom out</span>
+                    <span><kbd>Delete</kbd> Delete selection</span>
+                    <span><kbd>Esc</kbd> Clear selection</span>
+                    <span><kbd>Ctrl+S</kbd> Quick export</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Format Guide Modal -->
+    <div class="modal-overlay" id="formatModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Which audio format should I use?</h3>
+                <button class="modal-close" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="format-guide">
+                    <div class="format-guide-item">
+                        <div class="format-guide-badge wav">WAV</div>
+                        <div class="format-guide-content">
+                            <strong>Best for: Professional audio, music production, archival</strong>
+                            <p>Uncompressed, lossless quality. No audio data is lost. Use when you need the highest fidelity &mdash; studio recording, mastering, sound design, or as a source file for further editing. Large file sizes.</p>
+                            <div class="format-guide-tags">
+                                <span>Music Production</span><span>Film / Video</span><span>Archival</span><span>Sound Design</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="format-guide-item">
+                        <div class="format-guide-badge mp3">MP3</div>
+                        <div class="format-guide-content">
+                            <strong>Best for: Sharing, websites, universal compatibility</strong>
+                            <p>The most widely supported format. Good compression with acceptable quality at 192+ kbps. Use for music distribution, podcasts, website audio, or when file size matters and you need maximum device compatibility.</p>
+                            <div class="format-guide-tags">
+                                <span>Podcasts</span><span>Music Sharing</span><span>Websites</span><span>Mobile Apps</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="format-guide-item">
+                        <div class="format-guide-badge ogg">OGG</div>
+                        <div class="format-guide-content">
+                            <strong>Best for: Games, web apps, open-source projects</strong>
+                            <p>Open, royalty-free format with better compression than MP3 at similar quality. The go-to choice for game engines (Unity, Godot, etc.), HTML5 games, and quick sound effects. Smaller files than MP3 at equal quality.</p>
+                            <div class="format-guide-tags">
+                                <span>Game SFX</span><span>HTML5 Games</span><span>Unity / Godot</span><span>Web Apps</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="format-guide-item">
+                        <div class="format-guide-badge webm">WEBM</div>
+                        <div class="format-guide-content">
+                            <strong>Best for: Web video, streaming, modern browsers</strong>
+                            <p>Optimized for web delivery using the Opus codec. Excellent compression and quality. Ideal for pairing with video content, web streaming, or modern progressive web apps. Not supported in all native apps.</p>
+                            <div class="format-guide-tags">
+                                <span>Web Streaming</span><span>Video Projects</span><span>PWAs</span><span>Discord Bots</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="format-guide-footer">
+                    <strong>Quick picks:</strong>
+                    Need it to play everywhere? <strong>MP3</strong> &mdash;
+                    Game sound effect? <strong>OGG</strong> &mdash;
+                    Maximum quality? <strong>WAV</strong> &mdash;
+                    Web only? <strong>WEBM</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- lamejs for MP3 encoding -->
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+
+    <script src="app.js"></script>
+</body>
+</html>
